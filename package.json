@@ -1,0 +1,9 @@
+{
+  "name": "grouptab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Free trip expense splitter for friends, with couples/households grouped as one payment when settling up.",
+  "dependencies": {
+    "@libsql/client": "^0.15.0"
+  }
+}

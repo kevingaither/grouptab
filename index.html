@@ -1,0 +1,959 @@
+<title>GroupTab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --ink:#14202E; --ink-2:#56636F; --paper:#EEF1EF; --surface:#FFFFFF; --surface-2:#F7F8F6;
+    --line:#DCE2DE; --accent:#2F6F5E; --accent-ink:#FFFFFF; --accent-2:#E0703A; --accent-2-ink:#FFFFFF;
+    --credit:#237A50; --debit:#B23D26; --credit-bg:#E3F1E9; --debit-bg:#F7E7E2;
+    --shadow:0 1px 2px rgba(20,32,46,.06),0 6px 20px rgba(20,32,46,.07);
+    --radius-s:9px; --radius-m:14px; --radius-l:22px;
+    --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-body:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#ECEFEC; --ink-2:#A6B1AB; --paper:#101613; --surface:#171F1B; --surface-2:#1D2622;
+      --line:#2B342F; --accent:#54B892; --accent-ink:#062017; --accent-2:#F0895C; --accent-2-ink:#2A1206;
+      --credit:#5FCB94; --debit:#E58270; --credit-bg:#173226; --debit-bg:#33201B;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ECEFEC; --ink-2:#A6B1AB; --paper:#101613; --surface:#171F1B; --surface-2:#1D2622;
+    --line:#2B342F; --accent:#54B892; --accent-ink:#062017; --accent-2:#F0895C; --accent-2-ink:#2A1206;
+    --credit:#5FCB94; --debit:#E58270; --credit-bg:#173226; --debit-bg:#33201B;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--font-body);
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+  button{cursor:pointer;}
+  h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
+  .num{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+  a{color:var(--accent);}
+  #app{max-width:640px; margin:0 auto; min-height:100vh; padding-bottom:84px; position:relative;}
+
+  /* ---- top bar ---- */
+  .topbar{
+    position:sticky; top:0; z-index:20; background:var(--paper);
+    border-bottom:1px solid var(--line); padding:14px 18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .brand{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-.01em;}
+  .brand .dot{color:var(--accent-2);}
+  .backbtn{
+    display:flex; align-items:center; justify-content:center; width:34px; height:34px;
+    border-radius:50%; border:1px solid var(--line); background:var(--surface); flex:none;
+  }
+  .topbar .titleblock{flex:1; min-width:0;}
+  .topbar .titleblock h1{font-size:19px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .topbar .titleblock .sub{font-size:12.5px; color:var(--ink-2);}
+  .avatars{display:flex; margin-left:6px;}
+  .avatar{
+    width:26px; height:26px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;
+    border:2px solid var(--paper); margin-left:-8px; flex:none;
+  }
+  .avatar.couple{background:var(--accent-2); color:var(--accent-2-ink);}
+
+  /* ---- generic layout bits ---- */
+  .screen{padding:18px;}
+  .section-label{
+    font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink-2); margin:22px 0 10px;
+  }
+  .section-label:first-child{margin-top:0;}
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-m);
+    padding:16px; box-shadow:var(--shadow);
+  }
+  .stack{display:flex; flex-direction:column; gap:10px;}
+  .row{display:flex; align-items:center; gap:10px;}
+  .row.between{justify-content:space-between;}
+  .muted{color:var(--ink-2);}
+  .btn{
+    border-radius:999px; border:1px solid var(--line); background:var(--surface);
+    padding:10px 16px; font-weight:600; font-size:14px; display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .btn.ghost{background:transparent; border-color:transparent; padding:8px 10px;}
+  .btn.danger{color:var(--debit);}
+  .btn.block{width:100%; justify-content:center;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .fab{
+    position:fixed; right:calc(50% - 320px + 18px); bottom:92px; z-index:15;
+    width:56px; height:56px; border-radius:50%; background:var(--accent-2); color:var(--accent-2-ink);
+    border:none; box-shadow:var(--shadow); font-size:26px; display:flex; align-items:center; justify-content:center;
+  }
+  @media (max-width:676px){ .fab{right:20px;} }
+  .pill{
+    display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px;
+    font-size:12.5px; font-weight:600;
+  }
+  .pill.credit{background:var(--credit-bg); color:var(--credit);}
+  .pill.debit{background:var(--debit-bg); color:var(--debit);}
+  .pill.even{background:var(--surface-2); color:var(--ink-2);}
+  .empty{
+    text-align:center; padding:52px 20px; color:var(--ink-2);
+  }
+  .empty .glyph{
+    width:56px; height:56px; margin:0 auto 16px; border-radius:50%; background:var(--surface);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--accent);
+  }
+  .empty h2{font-size:20px; color:var(--ink); margin-bottom:8px;}
+  .empty p{max-width:38ch; margin:0 auto; font-size:14px; line-height:1.55;}
+  input[type=text],input[type=number],input[type=date],select,textarea{
+    width:100%; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+    border-radius:var(--radius-s); padding:10px 12px; outline:none;
+  }
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  label.field{display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:600; color:var(--ink-2);}
+  .amtwrap{position:relative;}
+  .amtwrap .cur{position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ink-2); font-family:var(--font-mono);}
+  .amtwrap input{padding-left:24px; font-family:var(--font-mono);}
+  .seg{display:flex; border:1px solid var(--line); border-radius:999px; padding:3px; background:var(--surface-2); gap:2px;}
+  .seg button{flex:1; border:none; background:transparent; border-radius:999px; padding:8px 10px; font-weight:600; font-size:13px; color:var(--ink-2);}
+  .seg button.active{background:var(--surface); color:var(--ink); box-shadow:var(--shadow);}
+  .chiprow{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:8px 13px;
+    font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:7px;
+  }
+  .chip input{accent-color:var(--accent);}
+  .chip.on{border-color:var(--accent); background:var(--credit-bg);}
+  .iconbtn{border:none; background:transparent; color:var(--ink-2); padding:6px; border-radius:8px; display:flex;}
+  .iconbtn:hover{background:var(--surface-2); color:var(--ink);}
+  hr.hair{border:none; border-top:1px solid var(--line); margin:14px 0;}
+
+  /* ---- expense / activity rows ---- */
+  .txrow{display:flex; gap:12px; padding:13px 4px; margin:0 -4px; border-bottom:1px solid var(--line); border-radius:8px;}
+  .txrow:last-child{border-bottom:none;}
+  .txrow[data-action="edit-expense"]:hover{background:var(--surface-2);}
+  .txicon{
+    width:38px; height:38px; border-radius:11px; background:var(--surface-2); flex:none;
+    display:flex; align-items:center; justify-content:center; color:var(--accent); font-family:var(--font-display); font-weight:600;
+  }
+  .txbody{flex:1; min-width:0;}
+  .txtitle{font-weight:600; font-size:14.5px;}
+  .txmeta{font-size:12.5px; color:var(--ink-2); margin-top:2px;}
+  .txamt{font-family:var(--font-mono); font-weight:600; white-space:nowrap;}
+  .txactions{display:flex; gap:2px;}
+
+  /* ---- bottom nav ---- */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:20;
+    background:var(--surface); border-top:1px solid var(--line);
+    display:flex; justify-content:center;
+  }
+  .tabbar-inner{max-width:640px; width:100%; display:flex;}
+  .tabbtn{
+    flex:1; border:none; background:transparent; padding:10px 4px 12px; display:flex; flex-direction:column;
+    align-items:center; gap:4px; color:var(--ink-2); font-size:11px; font-weight:600;
+  }
+  .tabbtn.active{color:var(--accent);}
+  .tabbtn svg{width:21px; height:21px;}
+
+  /* ---- modal ---- */
+  .backdrop{
+    position:fixed; inset:0; background:rgba(15,20,18,.5); z-index:40; display:flex; align-items:flex-end; justify-content:center;
+  }
+  @media (min-width:520px){ .backdrop{align-items:center;} }
+  .modal{
+    background:var(--paper); width:100%; max-width:520px; max-height:92vh; overflow-y:auto;
+    border-radius:20px 20px 0 0; padding:20px 18px 26px;
+  }
+  @media (min-width:520px){ .modal{border-radius:var(--radius-l);} }
+  .modal h2{font-size:20px; margin-bottom:14px;}
+  .modal .field{margin-bottom:14px;}
+  .modalhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .errmsg{color:var(--debit); font-size:12.5px; font-weight:600; margin-top:6px;}
+  .banner{
+    background:var(--surface-2); border:1px dashed var(--line); border-radius:var(--radius-s);
+    padding:10px 12px; font-size:12.5px; color:var(--ink-2); margin-bottom:16px;
+  }
+  .togglewrap{display:flex; justify-content:flex-end; margin:-4px 0 14px;}
+  .grouptcard{
+    display:flex; align-items:center; gap:12px; padding:14px; margin-bottom:10px;
+  }
+  .grouptcard .gname{font-family:var(--font-display); font-weight:600; font-size:16.5px;}
+  .grouptcard .gmeta{font-size:12.5px; color:var(--ink-2); margin-top:2px;}
+  .kv{display:flex; justify-content:space-between; font-size:13px; padding:6px 0;}
+  .kv .k{color:var(--ink-2);}
+  .kv .v{font-family:var(--font-mono); font-weight:600;}
+  .linkbox{
+    display:flex; gap:8px; align-items:center; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:var(--radius-s); padding:9px 11px; font-family:var(--font-mono); font-size:12.5px; overflow:hidden;
+  }
+  .linkbox span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;}
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:96px; background:var(--ink); color:var(--paper);
+    padding:10px 16px; border-radius:999px; font-size:13px; font-weight:600; z-index:60; box-shadow:var(--shadow);
+  }
+</style>
+
+<div id="app"></div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================= utilities ============================= */
+function uid(prefix){ return prefix+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4); }
+function slug(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'trip'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function money(cents){ const n=Math.round(cents||0); const v=(Math.abs(n)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); return (n<0?'-$':'$')+v; }
+function moneyAbs(cents){ return '$'+(Math.abs(Math.round(cents||0))/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function dollarsToCents(str){ const n=parseFloat(String(str).replace(/[^0-9.\-]/g,'')); return isFinite(n)? Math.round(n*100) : NaN; }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(iso){ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function initials(name){ return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
+function byId(id){ return document.getElementById(id); }
+function showToast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  byId('toastRoot').appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+/* ============================ remote store ============================ */
+/* Talks to our own /api/store serverless function (backed by Turso). Same
+   doc()/collection() shape the rest of the app expects, so nothing above
+   this needs to change. No push realtime here — instead each onSnapshot
+   polls every few seconds and only re-renders when the data actually
+   changed, which is plenty for a trip ledger a few people are updating. */
+const API_URL = '/api/store';
+const POLL_MS = 4000;
+function apiCall(payload){
+  return fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+    .then(function(res){
+      if(!res.ok) return res.json().catch(function(){ return {}; }).then(function(j){ throw new Error(j.error||('http_'+res.status)); });
+      return res.json();
+    });
+}
+const RemoteStore = (function(){
+  // Fires right after THIS tab successfully writes somewhere, so that tab's
+  // own onSnapshot listeners refresh immediately instead of waiting out the
+  // poll interval — writes from other people's devices still arrive within
+  // one poll cycle, which is the tradeoff we're making for "no sign-in,
+  // works anywhere" over true push realtime.
+  const bus = new EventTarget();
+  function announce(path){ bus.dispatchEvent(new CustomEvent('chg', {detail:path})); }
+  function snap(path, exists, data){ return {id:path.split('/').pop(), exists:!!exists, data:function(){ return data; }, metadata:{fromCache:false,hasPendingWrites:false}}; }
+  function doc(path){
+    return {
+      id: path.split('/').pop(), path,
+      get(){ return apiCall({op:'get', path:path}).then(function(r){ return snap(path, r.exists, r.data); }); },
+      set(data){ return apiCall({op:'set', path:path, data:data}).then(function(){ announce(path); }); },
+      update(data){ return apiCall({op:'update', path:path, data:data}).then(function(){ announce(path); }); },
+      delete(){ return apiCall({op:'delete', path:path}).then(function(){ announce(path); }); },
+      onSnapshot(next, err){
+        let stopped=false, last=null;
+        function tick(){
+          if(stopped) return;
+          apiCall({op:'get', path:path}).then(function(r){
+            const key=JSON.stringify(r);
+            if(key!==last){ last=key; next(snap(path, r.exists, r.data)); }
+          }).catch(function(e){ if(err) err({code:'unavailable', message:String(e && e.message || e)}); });
+        }
+        tick();
+        const iv=setInterval(tick, POLL_MS);
+        const onChg=function(e){ if(e.detail===path) tick(); };
+        bus.addEventListener('chg', onChg);
+        return function(){ stopped=true; clearInterval(iv); bus.removeEventListener('chg', onChg); };
+      },
+      collection(sub){ return collection(path+'/'+sub); }
+    };
+  }
+  function collection(path){
+    function toSnapshot(r){
+      const docs=(r.docs||[]).map(function(d){ return snap(path+'/'+d.id, true, d.data); });
+      return {docs:docs, size:docs.length, empty:docs.length===0, docChanges:function(){ return []; }, metadata:{fromCache:false,hasPendingWrites:false}};
+    }
+    return {
+      path: path,
+      doc(id){ return doc(path+'/'+(id||uid(''))); },
+      add(data){ const ref=this.doc(); return ref.set(data).then(function(){ return ref; }); },
+      get(){ return apiCall({op:'list', path:path}).then(toSnapshot); },
+      onSnapshot(next, err){
+        let stopped=false, last=null;
+        function tick(){
+          if(stopped) return;
+          apiCall({op:'list', path:path}).then(function(r){
+            const key=JSON.stringify(r);
+            if(key!==last){ last=key; next(toSnapshot(r)); }
+          }).catch(function(e){ if(err) err({code:'unavailable', message:String(e && e.message || e)}); });
+        }
+        tick();
+        const iv=setInterval(tick, POLL_MS);
+        const onChg=function(e){ if(e.detail.indexOf(path+'/')===0) tick(); };
+        bus.addEventListener('chg', onChg);
+        return function(){ stopped=true; clearInterval(iv); bus.removeEventListener('chg', onChg); };
+      }
+    };
+  }
+  return {doc:doc, collection:collection};
+})();
+
+/* ============================ money logic ============================ */
+function splitEqualCents(totalCents, ids){
+  const n=ids.length; if(n===0) return [];
+  const base=Math.floor(totalCents/n); let rem=totalCents-base*n;
+  return ids.map((id,idx)=>({memberId:id, amount: base + (idx<rem?1:0)}));
+}
+function computeBalances(group, expenses, settlements){
+  const bal={}; (group.members||[]).forEach(m=>bal[m.id]=0);
+  expenses.forEach(e=>{
+    bal[e.paidBy]=(bal[e.paidBy]||0)+e.amount;
+    (e.splits||[]).forEach(s=>{ bal[s.memberId]=(bal[s.memberId]||0)-s.amount; });
+  });
+  settlements.forEach(s=>{
+    bal[s.fromId]=(bal[s.fromId]||0)+s.amount;
+    bal[s.toId]=(bal[s.toId]||0)-s.amount;
+  });
+  return bal;
+}
+function buildNodes(group, balances, mode){
+  const couples = mode==='household' ? (group.couples||[]) : [];
+  const memberOf={}, nodes=[];
+  couples.forEach(c=>{
+    nodes.push({id:'c:'+c.id, label:c.name, memberIds:c.memberIds.slice(), isCouple:true, balance:0});
+    c.memberIds.forEach(mid=>memberOf[mid]=nodes[nodes.length-1]);
+  });
+  (group.members||[]).forEach(m=>{
+    if(!memberOf[m.id]){ const n={id:'m:'+m.id, label:m.name, memberIds:[m.id], isCouple:false, balance:0}; nodes.push(n); memberOf[m.id]=n; }
+  });
+  Object.keys(balances).forEach(mid=>{ if(memberOf[mid]) memberOf[mid].balance += balances[mid]; });
+  return nodes;
+}
+function simplifyDebts(nodes){
+  let debtors = nodes.filter(n=>n.balance<0).map(n=>Object.assign({},n)).sort((a,b)=>a.balance-b.balance);
+  let creditors = nodes.filter(n=>n.balance>0).map(n=>Object.assign({},n)).sort((a,b)=>b.balance-a.balance);
+  const txns=[]; let i=0,j=0;
+  while(i<debtors.length && j<creditors.length){
+    const d=debtors[i], c=creditors[j];
+    const amt=Math.min(-d.balance, c.balance);
+    if(amt>0){ txns.push({fromNode:d, toNode:c, amount:amt}); d.balance+=amt; c.balance-=amt; }
+    if(Math.abs(d.balance)<1) i++;
+    if(Math.abs(c.balance)<1) j++;
+  }
+  return txns;
+}
+function nodeRep(node){ return node.memberIds[0]; }
+function memberName(group,id){ const m=(group.members||[]).find(x=>x.id===id); return m? m.name : 'Someone'; }
+function coupleOfMember(group,id){ return (group.couples||[]).find(c=>c.memberIds.indexOf(id)>-1); }
+function displayName(group,id){ const c=coupleOfMember(group,id); return c? c.name : memberName(group,id); }
+
+/* =============================== state =============================== */
+const state = {
+  store:null, dbMode:'connecting', // 'live' | 'local' | 'connecting'
+  view:{screen:'home'}, mountedScreen:null, mountedGroupId:null,
+  groups:[], group:null, expenses:[], settlements:[], loading:true,
+  balMode:'household', // 'household' | 'individual'
+  modal:null // {type:'create'|'expense'|'couple'|'settle', ...}
+};
+let unsubs=[];
+function clearSubs(){ unsubs.forEach(u=>{ try{u();}catch(e){} }); unsubs=[]; }
+
+function meKey(gid){ return 'gt:me:'+gid; }
+function getMe(gid){ try{ return localStorage.getItem(meKey(gid)); }catch(e){ return null; } }
+function setMe(gid,id){ try{ localStorage.setItem(meKey(gid), id); }catch(e){} }
+
+/* ============================== routing =============================== */
+function parseHash(){
+  const h=(location.hash||'').replace(/^#\/?/,'');
+  const parts=h.split('/').filter(Boolean);
+  if(parts[0]==='g' && parts[1]) return {screen:'group', groupId:decodeURIComponent(parts[1]), tab:parts[2]||'activity'};
+  return {screen:'home'};
+}
+function navigate(path){ location.hash=path; }
+window.addEventListener('hashchange', ()=>{ state.view=parseHash(); mount(); });
+
+/* ============================== bootstrap ============================== */
+function boot(){
+  state.view=parseHash();
+  mount();
+}
+/* NOTE: the call that kicks this off lives at the very bottom of the file,
+   after every function and constant (like ICONS) it transitively depends
+   on has been defined — `window.claude`'s absence makes it fire boot()
+   synchronously, and const/function ordering in a script only really
+   matters for code that can run before the file finishes parsing. */
+
+/* ============================ subscriptions ============================ */
+let lastConnErrToast=0;
+function connErr(){
+  const now=Date.now();
+  if(now-lastConnErrToast>15000){ lastConnErrToast=now; showToast('Trouble reaching the server — check your connection'); }
+}
+function subscribeHome(){
+  const u = state.store.collection('groups').onSnapshot(function(snap){
+    state.groups = snap.docs.map(d=>Object.assign({id:d.id}, d.data())).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    if(state.view.screen==='home') renderApp();
+  }, connErr);
+  unsubs.push(u);
+}
+function subscribeGroup(gid){
+  state.group=null; state.expenses=[]; state.settlements=[]; state.loading=true;
+  const u1 = state.store.doc('groups/'+gid).onSnapshot(function(snap){
+    state.group = snap.exists ? Object.assign({id:snap.id}, snap.data()) : null;
+    state.loading=false;
+    if(state.view.groupId===gid) renderApp();
+  }, connErr);
+  const u2 = state.store.collection('groups/'+gid+'/expenses').onSnapshot(function(snap){
+    state.expenses = snap.docs.map(d=>Object.assign({id:d.id}, d.data())).sort((a,b)=>(b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
+    if(state.view.groupId===gid) renderApp();
+  }, connErr);
+  const u3 = state.store.collection('groups/'+gid+'/settlements').onSnapshot(function(snap){
+    state.settlements = snap.docs.map(d=>Object.assign({id:d.id}, d.data())).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    if(state.view.groupId===gid) renderApp();
+  }, connErr);
+  unsubs.push(u1,u2,u3);
+}
+
+function mount(){
+  const v=state.view;
+  if(v.screen==='home'){
+    if(state.mountedScreen!=='home'){ clearSubs(); state.mountedScreen='home'; state.mountedGroupId=null; subscribeHome(); }
+  } else if(v.screen==='group'){
+    if(state.mountedScreen!=='group' || state.mountedGroupId!==v.groupId){
+      clearSubs(); state.mountedScreen='group'; state.mountedGroupId=v.groupId; subscribeGroup(v.groupId);
+    }
+  }
+  renderApp();
+}
+
+/* ================================ icons ================================ */
+const ICONS = {
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>',
+  balances:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 8l-4 3.5L7 15M17 8l4 3.5-4 3.5"/></svg>',
+  settle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7l4 3-4 3M21 10H9M7 17l-4-3 4-3M3 14h12"/></svg>',
+  group:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3.5 19c.7-3 3-5 5.5-5s4.8 2 5.5 5M15 14.2c2 .2 3.7 1.9 4.3 4.3"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 12a1 1 0 001 1h6a1 1 0 001-1l1-12"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-10-9.3C.4 8.1 2 4.5 5.6 4c2.1-.3 4 .8 6.4 3.2C14.4 4.8 16.3 3.7 18.4 4c3.6.5 5.2 4.1 3.6 7.7C19.5 16.4 12 21 12 21z"/></svg>'
+};
+
+/* =============================== renderApp ============================== */
+function renderApp(){
+  const app=byId('app');
+  if(state.view.screen==='home') app.innerHTML = renderHomeScreen();
+  else app.innerHTML = renderGroupScreen();
+  renderModal();
+}
+
+/* ================================ HOME =================================== */
+function renderHomeScreen(){
+  const groups = state.groups||[];
+  let list;
+  if(!groups.length){
+    list = '<div class="empty">'+
+      '<div class="glyph">'+ICONS.heart+'</div>'+
+      '<h2>Your first trip starts here</h2>'+
+      '<p>Add everyone, log expenses as they happen, and settle up at the end &mdash; with couples counted as one household if you want.</p>'+
+      '</div>';
+  } else {
+    list = groups.map(g=>{
+      const n=(g.members||[]).length;
+      const nc=(g.couples||[]).length;
+      const av = (g.members||[]).slice(0,4).map(m=>{
+        const inCouple = coupleOfMember(g,m.id);
+        return '<div class="avatar'+(inCouple?' couple':'')+'">'+esc(initials(m.name))+'</div>';
+      }).join('');
+      return '<a class="card grouptcard" href="#/g/'+encodeURIComponent(g.id)+'/activity" style="text-decoration:none;color:inherit;">'+
+        '<div class="avatars">'+av+'</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div class="gname">'+esc(g.name)+'</div>'+
+          '<div class="gmeta">'+n+' '+(n===1?'person':'people')+(nc?' &middot; '+nc+' '+(nc===1?'couple':'couples'):'')+'</div>'+
+        '</div>'+
+      '</a>';
+    }).join('');
+  }
+  return ''+
+  '<div class="topbar"><div class="brand">Group<span class="dot">Tab</span></div></div>'+
+  '<div class="screen">'+
+    (groups.length? '<div class="section-label">Your trips</div>' : '')+
+    list+
+    '<button class="btn primary block" style="margin-top:18px;" data-action="open-create">'+ICONS.plus+' New trip</button>'+
+    '<div class="banner" style="margin-top:22px;">No premium tier. No daily limit on entries. No popups asking you to upgrade. No sign-in required for anyone you share a trip with. And unlike the other guy, GroupTab knows two people can share a bank account &mdash; group them as a couple and their debts settle as one payment.</div>'+
+  '</div>';
+}
+
+/* =============================== GROUP =================================== */
+function renderGroupScreen(){
+  const gid = state.view.groupId;
+  if(state.loading){
+    return '<div class="topbar"><a class="backbtn" href="#/">'+ICONS.back+'</a><div class="titleblock"><h1>Loading&hellip;</h1></div></div><div class="screen"></div>';
+  }
+  if(!state.group){
+    return '<div class="topbar"><a class="backbtn" href="#/">'+ICONS.back+'</a><div class="titleblock"><h1>Trip not found</h1></div></div>'+
+      '<div class="screen"><div class="empty"><p>This trip doesn&rsquo;t exist here, or the link is off.</p></div></div>';
+  }
+  const g=state.group, tab=state.view.tab||'activity';
+  const av=(g.members||[]).slice(0,4).map(m=>'<div class="avatar'+(coupleOfMember(g,m.id)?' couple':'')+'">'+esc(initials(m.name))+'</div>').join('');
+  let body;
+  if(tab==='balances') body = renderBalancesTab(g);
+  else if(tab==='settle') body = renderSettleTab(g);
+  else if(tab==='group') body = renderGroupTab(g);
+  else body = renderActivityTab(g);
+
+  const tabs=[['activity','Activity','activity'],['balances','Balances','balances'],['settle','Settle Up','settle'],['group','Group','group']];
+  const nav = tabs.map(function(t){
+    return '<a class="tabbtn'+(tab===t[0]?' active':'')+'" href="#/g/'+encodeURIComponent(gid)+'/'+t[0]+'">'+ICONS[t[2]]+'<span>'+t[1]+'</span></a>';
+  }).join('');
+
+  return ''+
+  '<div class="topbar">'+
+    '<a class="backbtn" href="#/">'+ICONS.back+'</a>'+
+    '<div class="titleblock"><h1>'+esc(g.name)+'</h1><div class="sub">'+(g.members||[]).length+' people</div></div>'+
+    '<div class="avatars">'+av+'</div>'+
+  '</div>'+
+  '<div class="screen">'+body+'</div>'+
+  (tab==='activity' ? '<button class="fab" data-action="open-expense" aria-label="Add expense">'+ICONS.plus+'</button>' : '')+
+  '<nav class="tabbar"><div class="tabbar-inner">'+nav+'</div></nav>';
+}
+
+function renderActivityTab(g){
+  const exps = state.expenses||[];
+  if(!exps.length){
+    return '<div class="empty"><div class="glyph">'+ICONS.activity+'</div><h2>No expenses yet</h2><p>Tap the + button to log the first one for this trip.</p></div>';
+  }
+  const totalMembers=(g.members||[]).length;
+  const rows = exps.map(function(e){
+    const payer = memberName(g,e.paidBy);
+    const n=(e.splits||[]).length;
+    const who = n===totalMembers ? 'split evenly, everyone' : 'split '+n+' way'+(n===1?'':'s');
+    return '<div class="txrow" data-action="edit-expense" data-id="'+e.id+'" style="cursor:pointer;">'+
+      '<div class="txicon">'+esc(initials(payer))+'</div>'+
+      '<div class="txbody">'+
+        '<div class="txtitle">'+esc(e.description)+'</div>'+
+        '<div class="txmeta">'+esc(payer)+' paid &middot; '+who+' &middot; '+fmtDate(e.date)+'</div>'+
+      '</div>'+
+      '<div class="row" style="align-items:flex-start;">'+
+        '<div class="txamt">'+money(e.amount)+'</div>'+
+        '<div class="txactions">'+
+          '<button class="iconbtn" data-action="delete-expense" data-id="'+e.id+'" aria-label="Delete">'+ICONS.trash+'</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  const total = exps.reduce(function(s,e){ return s+e.amount; },0);
+  return '<div class="card" style="margin-bottom:14px;"><div class="kv"><div class="k">Total trip spend</div><div class="v">'+money(total)+'</div></div></div>'+
+    '<div class="section-label">Activity</div><div class="card">'+rows+'</div>';
+}
+
+function balModeToggle(g){
+  if(!(g.couples||[]).length) return '';
+  return '<div class="togglewrap"><div class="seg">'+
+    '<button data-action="set-balmode" data-mode="household" class="'+(state.balMode==='household'?'active':'')+'">Household</button>'+
+    '<button data-action="set-balmode" data-mode="individual" class="'+(state.balMode==='individual'?'active':'')+'">Individual</button>'+
+    '</div></div>';
+}
+function currentMode(g){ return (g.couples||[]).length ? state.balMode : 'individual'; }
+
+function renderBalancesTab(g){
+  const bal = computeBalances(g, state.expenses, state.settlements);
+  const mode = currentMode(g);
+  const nodes = buildNodes(g, bal, mode);
+  const me = getMe(g.id);
+  let meBlock='';
+  if(me){
+    const meNode = nodes.find(function(n){ return n.memberIds.indexOf(me)>-1; });
+    if(meNode){
+      const b=Math.round(meNode.balance);
+      const cls = b>0?'credit':(b<0?'debit':'even');
+      const txt = b>0? 'You’re owed' : (b<0? 'You owe' : 'You’re settled up');
+      const others = meNode.memberIds.filter(function(id){return id!==me;}).map(function(id){return memberName(g,id);});
+      meBlock = '<div class="card" style="margin-bottom:14px;"><div class="row between"><div><div class="muted" style="font-size:12.5px;">'+txt+(others.length?' (combined with '+esc(others.join(' & '))+')':'')+'</div><h2 style="margin-top:2px;">'+moneyAbs(b)+'</h2></div><span class="pill '+cls+'">'+esc(meNode.label)+'</span></div></div>';
+    }
+  }
+  const rows = nodes.slice().sort(function(a,b){ return b.balance-a.balance; }).map(function(n){
+    const b=Math.round(n.balance);
+    const cls=b>0?'credit':(b<0?'debit':'even');
+    const txt=b>0?'is owed':(b<0?'owes':'settled up');
+    return '<div class="txrow"><div class="txicon">'+esc(initials(n.label))+'</div><div class="txbody"><div class="txtitle">'+esc(n.label)+'</div><div class="txmeta">'+txt+'</div></div><span class="pill '+cls+'">'+moneyAbs(b)+'</span></div>';
+  }).join('');
+  return meBlock+balModeToggle(g)+'<div class="section-label">Balances</div><div class="card">'+rows+'</div>';
+}
+
+function renderSettleTab(g){
+  const bal = computeBalances(g, state.expenses, state.settlements);
+  const mode = currentMode(g);
+  const nodes = buildNodes(g, bal, mode);
+  const txns = simplifyDebts(nodes);
+  let sugg;
+  if(!txns.length){
+    sugg = '<div class="empty" style="padding:26px 12px;"><p>Everyone&rsquo;s settled up. Nothing to pay.</p></div>';
+  } else {
+    sugg = txns.map(function(t){
+      return '<div class="txrow"><div class="txbody"><div class="txtitle">'+esc(t.fromNode.label)+' &rarr; '+esc(t.toNode.label)+'</div><div class="txmeta">Suggested payment</div></div>'+
+        '<div class="row"><div class="txamt">'+moneyAbs(t.amount)+'</div>'+
+        '<button class="btn" data-action="record-suggested" data-from="'+nodeRep(t.fromNode)+'" data-to="'+nodeRep(t.toNode)+'" data-amount="'+Math.round(t.amount)+'" data-mode="'+mode+'">Mark paid</button></div></div>';
+    }).join('');
+  }
+  const hist = (state.settlements||[]).map(function(s){
+    return '<div class="txrow"><div class="txbody"><div class="txtitle">'+esc(displayName(g,s.fromId))+' &rarr; '+esc(displayName(g,s.toId))+'</div><div class="txmeta">'+fmtDate(s.date)+(s.note?' &middot; '+esc(s.note):'')+'</div></div>'+
+      '<div class="row"><div class="txamt">'+moneyAbs(s.amount)+'</div><button class="iconbtn" data-action="delete-settlement" data-id="'+s.id+'" aria-label="Undo">'+ICONS.trash+'</button></div></div>';
+  }).join('') || '<div class="muted" style="padding:8px 2px;font-size:13px;">No payments recorded yet.</div>';
+  return balModeToggle(g)+
+    '<div class="section-label">Suggested payments</div><div class="card">'+sugg+'</div>'+
+    '<button class="btn block" style="margin-top:14px;" data-action="open-settle">Record a payment manually</button>'+
+    '<div class="section-label">Payment history</div><div class="card">'+hist+'</div>';
+}
+
+function renderGroupTab(g){
+  const memberRows = (g.members||[]).map(function(m){
+    const c=coupleOfMember(g,m.id);
+    const used = state.expenses.some(function(e){ return e.paidBy===m.id || (e.splits||[]).some(function(s){ return s.memberId===m.id; }); })
+      || state.settlements.some(function(s){ return s.fromId===m.id || s.toId===m.id; });
+    return '<div class="row between" style="padding:9px 0;border-bottom:1px solid var(--line);">'+
+      '<div class="row"><div class="avatar'+(c?' couple':'')+'" style="margin-left:0;">'+esc(initials(m.name))+'</div>'+
+      '<div><div style="font-weight:600;">'+esc(m.name)+'</div>'+(c?'<div class="muted" style="font-size:12px;">'+esc(c.name)+'</div>':'')+'</div></div>'+
+      (used? '<span class="muted" style="font-size:12px;">has activity</span>' : '<button class="iconbtn" data-action="remove-member" data-id="'+m.id+'" aria-label="Remove">'+ICONS.trash+'</button>')+
+      '</div>';
+  }).join('');
+  const coupleRows = (g.couples||[]).map(function(c){
+    return '<div class="row between" style="padding:9px 0;border-bottom:1px solid var(--line);"><div><div style="font-weight:600;">'+esc(c.name)+'</div>'+
+      '<div class="muted" style="font-size:12px;">'+c.memberIds.map(function(id){ return memberName(g,id); }).join(' & ')+'</div></div>'+
+      '<button class="iconbtn" data-action="remove-couple" data-id="'+c.id+'" aria-label="Unlink">'+ICONS.trash+'</button></div>';
+  }).join('') || '<div class="muted" style="font-size:13px;padding:6px 0 2px;">Pair up two (or more) people who share a bank account, so their debts settle as one payment instead of several.</div>';
+  const link = location.href.split('#')[0]+'#/g/'+encodeURIComponent(g.id)+'/activity';
+  const me = getMe(g.id);
+  return ''+
+    '<div class="section-label">Share this trip</div>'+
+    '<div class="linkbox"><span>'+esc(link)+'</span><button class="btn ghost" data-action="copy-link" data-link="'+esc(link)+'" style="flex:none;padding:4px 8px;">Copy</button></div>'+
+    '<div class="section-label">Which one are you?</div>'+
+    '<div class="chiprow">'+(g.members||[]).map(function(m){ return '<button class="chip'+(me===m.id?' on':'')+'" data-action="set-me" data-id="'+m.id+'">'+esc(m.name)+'</button>'; }).join('')+'</div>'+
+    '<div class="section-label">Members</div><div class="card">'+memberRows+'</div>'+
+    '<button class="btn block" style="margin-top:10px;" data-action="open-addmember">'+ICONS.plus+' Add a person</button>'+
+    '<div class="section-label">Couples &amp; households</div><div class="card">'+coupleRows+'</div>'+
+    '<button class="btn block" style="margin-top:10px;" data-action="open-couple">'+ICONS.plus+' Link a couple</button>'+
+    '<div class="section-label">Trip name</div>'+
+    '<div class="row"><input type="text" id="gname-input" value="'+esc(g.name)+'"><button class="btn" data-action="rename-group" style="flex:none;">Save</button></div>';
+}
+
+/* ================================ modals ================================ */
+function val(id){ const el=byId(id); return el ? el.value : ''; }
+function modalWrap(title, inner){
+  return '<div class="backdrop" data-role="backdrop"><div class="modal">'+
+    '<div class="modalhead"><h2>'+esc(title)+'</h2><button class="iconbtn" data-action="close-modal" aria-label="Close">'+ICONS.close+'</button></div>'+
+    inner+'</div></div>';
+}
+function renderModal(){
+  const root=byId('modalRoot');
+  if(!state.modal){ root.innerHTML=''; return; }
+  let html='';
+  if(state.modal.type==='create') html=renderCreateModal(state.modal);
+  else if(state.modal.type==='expense') html=renderExpenseModal(state.modal);
+  else if(state.modal.type==='addmember') html=renderAddMemberModal(state.modal);
+  else if(state.modal.type==='couple') html=renderCoupleModal(state.modal);
+  else if(state.modal.type==='settle') html=renderSettleModal(state.modal);
+  root.innerHTML=html;
+}
+
+/* ---- create trip ---- */
+function renderCreateModal(m){
+  const rows=m.members.map(function(name,idx){
+    return '<div class="row" style="margin-bottom:8px;"><input type="text" class="cg-member-input" placeholder="Person '+(idx+1)+'" value="'+esc(name)+'">'+
+      (m.members.length>1 ? '<button type="button" class="iconbtn" data-action="cg-removerow" data-idx="'+idx+'" aria-label="Remove">'+ICONS.close+'</button>' : '')+
+      '</div>';
+  }).join('');
+  return modalWrap('New trip', ''+
+    '<label class="field">Trip name<input type="text" id="cg-name" placeholder="e.g. Lake Tahoe 2027" value="'+esc(m.tripName||'')+'"></label>'+
+    '<label class="field" style="margin-bottom:6px;">Who&rsquo;s going?</label>'+
+    rows+
+    '<button type="button" class="btn ghost" data-action="cg-addrow" style="margin-bottom:16px;">'+ICONS.plus+' Add another person</button>'+
+    '<div id="cg-err" class="errmsg"></div>'+
+    '<button class="btn primary block" data-action="submit-create">Create trip</button>'
+  );
+}
+function syncCreateMembersFromDom(){
+  if(byId('cg-name')) state.modal.tripName=val('cg-name');
+  const inputs=document.querySelectorAll('.cg-member-input');
+  state.modal.members=Array.prototype.map.call(inputs, function(inp){ return inp.value; });
+}
+function submitCreateGroup(){
+  syncCreateMembersFromDom();
+  const name=(state.modal.tripName||'').trim();
+  const err=byId('cg-err');
+  if(!name){ err.textContent='Give your trip a name.'; return; }
+  const names=state.modal.members.map(function(s){ return s.trim(); }).filter(Boolean);
+  if(!names.length){ err.textContent='Add at least one person.'; return; }
+  const members=names.map(function(n){ return {id:uid('m'), name:n}; });
+  const gid=slug(name)+'-'+Math.random().toString(36).slice(2,6);
+  state.store.doc('groups/'+gid).set({name:name, members:members, couples:[], createdAt:Date.now()}).then(function(){
+    state.modal=null; renderModal(); navigate('/g/'+encodeURIComponent(gid)+'/activity'); showToast('Trip created');
+  }).catch(function(){ err.textContent='Couldn’t create that trip — try again.'; });
+}
+
+/* ---- add / edit expense ---- */
+function openExpenseModal(editId){
+  const g=state.group;
+  if(editId){
+    const e=state.expenses.find(function(x){ return x.id===editId; });
+    if(!e) return;
+    const participants={}; (e.splits||[]).forEach(function(s){ participants[s.memberId]=true; });
+    const ids=(e.splits||[]).map(function(s){ return s.memberId; });
+    const expected=splitEqualCents(e.amount, ids);
+    const isEqual = (e.splits||[]).every(function(s){ const exp=expected.find(function(x){ return x.memberId===s.memberId; }); return exp && exp.amount===s.amount; });
+    const customAmounts={}; (e.splits||[]).forEach(function(s){ customAmounts[s.memberId]=(s.amount/100).toFixed(2); });
+    state.modal={type:'expense', editingId:editId, origCreatedAt:e.createdAt,
+      form:{description:e.description, amount:(e.amount/100).toFixed(2), paidBy:e.paidBy, date:e.date,
+        mode:isEqual?'equal':'custom', participants:participants, customAmounts:customAmounts}};
+  } else {
+    const participants={}; (g.members||[]).forEach(function(m){ participants[m.id]=true; });
+    state.modal={type:'expense', editingId:null,
+      form:{description:'', amount:'', paidBy:(g.members[0]&&g.members[0].id)||'', date:todayISO(),
+        mode:'equal', participants:participants, customAmounts:{}}};
+  }
+  renderModal();
+}
+function syncExpenseFormFromDom(){
+  const f=state.modal.form;
+  if(byId('exp-desc')) f.description=val('exp-desc');
+  if(byId('exp-amount')) f.amount=val('exp-amount');
+  if(byId('exp-paidby')) f.paidBy=val('exp-paidby');
+  if(byId('exp-date')) f.date=val('exp-date');
+  document.querySelectorAll('.custom-amt-input').forEach(function(inp){ f.customAmounts[inp.dataset.id]=inp.value; });
+}
+function seedCustomAmounts(){
+  const f=state.modal.form;
+  const ids=Object.keys(f.participants).filter(function(id){ return f.participants[id]; });
+  const amt=dollarsToCents(f.amount)||0;
+  splitEqualCents(amt, ids).forEach(function(s){ f.customAmounts[s.memberId]=(s.amount/100).toFixed(2); });
+}
+function renderExpenseModal(m){
+  const g=state.group, f=m.form;
+  const participantIds=Object.keys(f.participants).filter(function(id){ return f.participants[id]; });
+  const payerOptions=(g.members||[]).map(function(mm){ return '<option value="'+mm.id+'"'+(f.paidBy===mm.id?' selected':'')+'>'+esc(mm.name)+'</option>'; }).join('');
+  const chips=(g.members||[]).map(function(mm){
+    const on=!!f.participants[mm.id];
+    return '<button type="button" class="chip'+(on?' on':'')+'" data-action="toggle-participant" data-id="'+mm.id+'">'+(on?'&#10003; ':'')+esc(mm.name)+'</button>';
+  }).join('');
+  let customBlock='';
+  if(f.mode==='custom'){
+    customBlock='<div class="stack" style="margin:4px 0 4px;">'+participantIds.map(function(id){
+      const v=f.customAmounts[id]!=null?f.customAmounts[id]:'';
+      return '<label class="field" style="flex-direction:row;align-items:center;gap:10px;"><span style="flex:1;font-weight:600;color:var(--ink);">'+esc(memberName(g,id))+'</span>'+
+        '<div class="amtwrap" style="width:110px;"><span class="cur">$</span><input type="text" inputmode="decimal" class="custom-amt-input" data-id="'+id+'" value="'+esc(v)+'"></div></label>';
+    }).join('')+'</div>';
+  }
+  const title=m.editingId?'Edit expense':'Add expense';
+  const roughly = (f.mode==='equal' && participantIds.length) ? '<div class="muted" style="font-size:12.5px;margin:0 0 12px;">'+moneyAbs(Math.round((dollarsToCents(f.amount)||0)/participantIds.length))+' each</div>' : '';
+  return modalWrap(title, ''+
+    '<label class="field">What was it?<input type="text" id="exp-desc" placeholder="Dinner, gas, the Airbnb&hellip;" value="'+esc(f.description)+'"></label>'+
+    '<label class="field">Amount<div class="amtwrap"><span class="cur">$</span><input type="text" inputmode="decimal" id="exp-amount" placeholder="0.00" value="'+esc(f.amount)+'"></div></label>'+
+    '<label class="field">Who paid?<select id="exp-paidby">'+payerOptions+'</select></label>'+
+    '<label class="field">Date<input type="date" id="exp-date" value="'+esc(f.date)+'"></label>'+
+    '<label class="field">Split between</label><div class="chiprow" style="margin-bottom:12px;">'+chips+'</div>'+
+    '<div class="seg" style="margin-bottom:2px;">'+
+      '<button type="button" data-action="set-splitmode" data-mode="equal" class="'+(f.mode==='equal'?'active':'')+'">Split equally</button>'+
+      '<button type="button" data-action="set-splitmode" data-mode="custom" class="'+(f.mode==='custom'?'active':'')+'">Custom amounts</button>'+
+    '</div>'+roughly+customBlock+
+    '<div id="exp-err" class="errmsg"></div>'+
+    '<div class="row" style="margin-top:16px;">'+
+      (m.editingId?'<button type="button" class="btn danger" data-action="delete-expense" data-id="'+m.editingId+'">Delete</button>':'')+
+      '<button class="btn primary block" data-action="submit-expense">Save expense</button>'+
+    '</div>'
+  );
+}
+function submitExpense(){
+  const m=state.modal;
+  const desc=val('exp-desc').trim();
+  const amount=dollarsToCents(val('exp-amount'));
+  const paidBy=val('exp-paidby');
+  const date=val('exp-date')||todayISO();
+  const participantIds=Array.prototype.slice.call(document.querySelectorAll('[data-action="toggle-participant"].on')).map(function(el){ return el.dataset.id; });
+  const err=byId('exp-err');
+  if(!desc){ err.textContent='Give it a short description.'; return; }
+  if(!amount || amount<=0){ err.textContent='Enter an amount greater than $0.'; return; }
+  if(!paidBy){ err.textContent='Pick who paid.'; return; }
+  if(!participantIds.length){ err.textContent='Pick at least one person to split with.'; return; }
+  let splits;
+  if(m.form.mode==='custom'){
+    splits=participantIds.map(function(id){
+      const inp=document.querySelector('.custom-amt-input[data-id="'+id+'"]');
+      return {memberId:id, amount: dollarsToCents(inp?inp.value:'0')||0};
+    });
+    const sum=splits.reduce(function(s,x){ return s+x.amount; },0);
+    if(sum!==amount){ err.textContent='Custom amounts add up to '+money(sum)+', not '+money(amount)+'. Adjust to match.'; return; }
+  } else {
+    splits=splitEqualCents(amount, participantIds);
+  }
+  const payload={description:desc, amount:amount, paidBy:paidBy, date:date, splits:splits, createdAt: m.editingId ? (m.origCreatedAt||Date.now()) : Date.now()};
+  const gid=state.view.groupId;
+  const p = m.editingId ? state.store.doc('groups/'+gid+'/expenses/'+m.editingId).set(payload) : state.store.collection('groups/'+gid+'/expenses').add(payload);
+  p.then(function(){ state.modal=null; renderModal(); showToast('Expense saved'); }).catch(function(){ err.textContent='Couldn’t save — try again.'; });
+}
+
+/* ---- add member ---- */
+function renderAddMemberModal(m){
+  return modalWrap('Add a person', ''+
+    '<label class="field">Name<input type="text" id="am-name" placeholder="First name is plenty" value="'+esc(m.name||'')+'"></label>'+
+    '<div id="am-err" class="errmsg"></div>'+
+    '<button class="btn primary block" data-action="submit-addmember">Add</button>'
+  );
+}
+function submitAddMember(){
+  const name=val('am-name').trim();
+  const err=byId('am-err');
+  if(!name){ err.textContent='Enter a name.'; return; }
+  const g=state.group, gid=state.view.groupId;
+  const newMembers=(g.members||[]).concat([{id:uid('m'), name:name}]);
+  state.store.doc('groups/'+gid).update({members:newMembers}).then(function(){ state.modal=null; renderModal(); showToast(name+' added'); });
+}
+function removeMember(id){
+  const g=state.group, gid=state.view.groupId;
+  const newMembers=(g.members||[]).filter(function(m){ return m.id!==id; });
+  const newCouples=(g.couples||[]).filter(function(c){ return c.memberIds.indexOf(id)===-1; });
+  state.store.doc('groups/'+gid).update({members:newMembers, couples:newCouples}).then(function(){ showToast('Removed'); });
+}
+
+/* ---- couples ---- */
+function defaultCoupleName(){
+  const g=state.group, m=state.modal;
+  const ids=Object.keys(m.selected).filter(function(id){ return m.selected[id]; });
+  const names=ids.map(function(id){ return memberName(g,id); });
+  if(names.length<2) return '';
+  if(names.length===2) return names[0]+' & '+names[1];
+  return names.slice(0,-1).join(', ')+' & '+names[names.length-1];
+}
+function renderCoupleModal(m){
+  const g=state.group;
+  const free=(g.members||[]).filter(function(mm){ return !coupleOfMember(g,mm.id); });
+  if(free.length<2){
+    return modalWrap('Link a couple', '<p class="muted">Everyone eligible is already paired up. Unlink a couple first if you need to regroup.</p><button type="button" class="btn block" data-action="close-modal">Close</button>');
+  }
+  const chips=free.map(function(mm){
+    const on=!!m.selected[mm.id];
+    return '<button type="button" class="chip'+(on?' on':'')+'" data-action="toggle-couple-member" data-id="'+mm.id+'">'+(on?'&#10003; ':'')+esc(mm.name)+'</button>';
+  }).join('');
+  const count=Object.keys(m.selected).filter(function(id){ return m.selected[id]; }).length;
+  return modalWrap('Link a couple', ''+
+    '<p class="muted" style="margin-top:-6px;margin-bottom:14px;font-size:13px;">Pick everyone who shares one bank account. Their individual debts combine into a single payment when settling up.</p>'+
+    '<div class="chiprow" style="margin-bottom:14px;">'+chips+'</div>'+
+    '<label class="field">Call it<input type="text" id="cp-name" placeholder="e.g. Kevin & Lainie" value="'+esc(m.name||'')+'"></label>'+
+    '<div id="cp-err" class="errmsg"></div>'+
+    '<button class="btn primary block" data-action="submit-couple"'+(count<2?' disabled':'')+'>Link them</button>'
+  );
+}
+function submitCouple(){
+  const m=state.modal, g=state.group, gid=state.view.groupId;
+  const ids=Object.keys(m.selected).filter(function(id){ return m.selected[id]; });
+  const err=byId('cp-err');
+  if(ids.length<2){ err.textContent='Pick at least two people.'; return; }
+  const name=(val('cp-name')||'').trim()||defaultCoupleName();
+  const couple={id:uid('c'), name:name, memberIds:ids};
+  const newCouples=(g.couples||[]).concat([couple]);
+  state.store.doc('groups/'+gid).update({couples:newCouples}).then(function(){ state.modal=null; renderModal(); showToast(name+' linked'); });
+}
+function removeCouple(id){
+  const g=state.group, gid=state.view.groupId;
+  const newCouples=(g.couples||[]).filter(function(c){ return c.id!==id; });
+  state.store.doc('groups/'+gid).update({couples:newCouples}).then(function(){ showToast('Unlinked'); });
+}
+
+/* ---- settle up ---- */
+function renderSettleModal(){
+  const g=state.group, mode=currentMode(g);
+  const bal=computeBalances(g, state.expenses, state.settlements);
+  const nodes=buildNodes(g, bal, mode);
+  const opts=nodes.map(function(n){ return '<option value="'+nodeRep(n)+'">'+esc(n.label)+'</option>'; }).join('');
+  return modalWrap('Record a payment', ''+
+    '<label class="field">From<select id="st-from">'+opts+'</select></label>'+
+    '<label class="field">To<select id="st-to">'+opts+'</select></label>'+
+    '<label class="field">Amount<div class="amtwrap"><span class="cur">$</span><input type="text" inputmode="decimal" id="st-amount" placeholder="0.00"></div></label>'+
+    '<label class="field">Date<input type="date" id="st-date" value="'+todayISO()+'"></label>'+
+    '<label class="field">Note (optional)<input type="text" id="st-note" placeholder="Venmo, cash&hellip;"></label>'+
+    '<div id="st-err" class="errmsg"></div>'+
+    '<button class="btn primary block" data-action="submit-settle">Save payment</button>'
+  );
+}
+function submitSettle(){
+  const from=val('st-from'), to=val('st-to'), amount=dollarsToCents(val('st-amount')), date=val('st-date')||todayISO(), note=val('st-note').trim();
+  const err=byId('st-err');
+  if(!from || !to || from===to){ err.textContent='Pick two different people (or households).'; return; }
+  if(!amount || amount<=0){ err.textContent='Enter an amount greater than $0.'; return; }
+  const gid=state.view.groupId;
+  state.store.collection('groups/'+gid+'/settlements').add({fromId:from,toId:to,amount:amount,date:date,note:note,createdAt:Date.now()})
+    .then(function(){ state.modal=null; renderModal(); showToast('Payment recorded'); });
+}
+function recordSuggested(from,to,amount,mode){
+  const gid=state.view.groupId;
+  state.store.collection('groups/'+gid+'/settlements').add({fromId:from,toId:to,amount:amount,date:todayISO(),
+    note:'Settled — '+(mode==='household'?'household':'individual')+' view suggestion', createdAt:Date.now()})
+    .then(function(){ showToast('Marked as paid'); });
+}
+
+/* ---- misc actions ---- */
+function renameGroup(){
+  const name=val('gname-input').trim(); if(!name) return;
+  const gid=state.view.groupId;
+  if(name!==state.group.name){ state.store.doc('groups/'+gid).update({name:name}).then(function(){ showToast('Renamed'); }); }
+}
+function copyLink(link){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(function(){ showToast('Link copied'); }).catch(function(){ showToast('Long-press the link to copy'); });
+  } else { showToast('Long-press the link to copy'); }
+}
+
+/* ============================ event delegation =========================== */
+document.addEventListener('click', function(e){
+  const backdrop = e.target.closest ? e.target.closest('[data-role="backdrop"]') : null;
+  if(backdrop && e.target===backdrop){ state.modal=null; renderModal(); return; }
+  const btn=e.target.closest('[data-action]');
+  if(!btn) return;
+  const action=btn.dataset.action;
+  const gid=state.view.groupId;
+  if(action==='open-create'){ state.modal={type:'create', members:['','']}; renderModal(); }
+  else if(action==='cg-addrow'){ syncCreateMembersFromDom(); state.modal.members.push(''); renderModal(); }
+  else if(action==='cg-removerow'){ syncCreateMembersFromDom(); state.modal.members.splice(parseInt(btn.dataset.idx,10),1); if(!state.modal.members.length) state.modal.members=['']; renderModal(); }
+  else if(action==='submit-create'){ submitCreateGroup(); }
+  else if(action==='close-modal'){ state.modal=null; renderModal(); }
+  else if(action==='open-expense'){ openExpenseModal(null); }
+  else if(action==='edit-expense'){ openExpenseModal(btn.dataset.id); }
+  else if(action==='delete-expense'){ if(confirm('Delete this expense?')){ state.store.doc('groups/'+gid+'/expenses/'+btn.dataset.id).delete().then(function(){ state.modal=null; renderModal(); showToast('Expense deleted'); }); } }
+  else if(action==='toggle-participant'){ syncExpenseFormFromDom(); const mid=btn.dataset.id; state.modal.form.participants[mid]=!state.modal.form.participants[mid]; renderModal(); }
+  else if(action==='set-splitmode'){ syncExpenseFormFromDom(); state.modal.form.mode=btn.dataset.mode; if(btn.dataset.mode==='custom') seedCustomAmounts(); renderModal(); }
+  else if(action==='submit-expense'){ submitExpense(); }
+  else if(action==='open-addmember'){ state.modal={type:'addmember', name:''}; renderModal(); }
+  else if(action==='submit-addmember'){ submitAddMember(); }
+  else if(action==='remove-member'){ if(confirm('Remove this person from the trip?')) removeMember(btn.dataset.id); }
+  else if(action==='open-couple'){ state.modal={type:'couple', selected:{}, name:'', lastDefault:''}; renderModal(); }
+  else if(action==='toggle-couple-member'){
+    if(byId('cp-name')) state.modal.name=val('cp-name');
+    const wasDefault = state.modal.name==='' || state.modal.name===state.modal.lastDefault;
+    state.modal.selected[btn.dataset.id]=!state.modal.selected[btn.dataset.id];
+    const nd=defaultCoupleName();
+    if(wasDefault) state.modal.name=nd;
+    state.modal.lastDefault=nd;
+    renderModal();
+  }
+  else if(action==='submit-couple'){ submitCouple(); }
+  else if(action==='remove-couple'){ if(confirm('Unlink this couple?')) removeCouple(btn.dataset.id); }
+  else if(action==='set-me'){ setMe(gid, btn.dataset.id); renderApp(); }
+  else if(action==='copy-link'){ copyLink(btn.dataset.link); }
+  else if(action==='rename-group'){ renameGroup(); }
+  else if(action==='set-balmode'){ state.balMode=btn.dataset.mode; renderApp(); }
+  else if(action==='record-suggested'){ recordSuggested(btn.dataset.from, btn.dataset.to, parseInt(btn.dataset.amount,10), btn.dataset.mode); }
+  else if(action==='open-settle'){ state.modal={type:'settle'}; renderModal(); }
+  else if(action==='submit-settle'){ submitSettle(); }
+  else if(action==='delete-settlement'){ if(confirm('Remove this payment record?')) state.store.doc('groups/'+gid+'/settlements/'+btn.dataset.id).delete().then(function(){ showToast('Removed'); }); }
+});
+
+/* ================================= go ================================== */
+state.store = RemoteStore;
+state.dbMode = 'live';
+boot();
+
+})();
+</script>
